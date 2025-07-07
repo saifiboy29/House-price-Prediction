@@ -5,16 +5,14 @@ import requests
 import os
 
 # Function to fetch poster
+
 def fetch_poster(movie_id):
-    try:
-        url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key=621b9d742b7de7b7d798e91d78e1dfd7&language=en-US"
-        response = requests.get(url)
-        if response.status_code != 200:
-            return None
-        data = response.json()
-        return "https://image.tmdb.org/t/p/w500/" + data['poster_path'] if 'poster_path' in data else None
-    except:
-        return None
+    url = "https://api.themoviedb.org/3/movie/{}?api_key=8265bd1679663a7ea12ac168da84d2e8&language=en-US".format(movie_id)
+    data = requests.get(url)
+    data = data.json()
+    poster_path = data['poster_path']
+    full_path = "https://image.tmdb.org/t/p/w500/" + poster_path
+    return full_path
 
 # Recommendation function
 def recommend(movie):
@@ -31,16 +29,17 @@ def recommend(movie):
     recommended_posters = []
     for i in movie_list:
         movie_id = movies.iloc[i[0]].id
-        recommended_movies.append(movies.iloc[i[0]]['title'])
+        movie_title = movies.iloc[i[0]].title
         poster_url = fetch_poster(movie_id)
-        recommended_posters.append(poster_url)
+        recommended_movies.append(movie_title)
+        recommended_posters.append(poster_url if poster_url else "https://via.placeholder.com/300x450?text=No+Image")
 
     return recommended_movies, recommended_posters
 
 
 # File paths
-movies_file_path = r"C:\Users\mypc\OneDrive\Desktop\asad\ml project\movie recommendation system\movies_dict.pkl"
-similarity_file_path = r"C:\Users\mypc\OneDrive\Desktop\asad\ml project\movie recommendation system\similarity.pkl"
+movies_file_path = r"C:\Users\mypc\OneDrive\Desktop\asad\ml project\movie-recommend-system\movies_dict.pkl"
+similarity_file_path = r"C:\Users\mypc\OneDrive\Desktop\asad\ml project\movie-recommend-system\similarity.pkl"
 
 # Load data
 if not os.path.exists(movies_file_path) or not os.path.exists(similarity_file_path):
@@ -66,10 +65,7 @@ else:
             for i in range(5):
                 with cols[i]:
                     st.text(recommended_movies[i])
-                    if recommended_posters[i]:
-                        st.image(recommended_posters[i])
-                    else:
-                        st.warning("Poster not available")
+                    st.image(recommended_posters[i], use_column_width=True)
             st.success("✅ Recommendations displayed successfully!")
         else:
             st.error("Could not generate recommendations.")
